@@ -8,6 +8,12 @@ type HTTPResponse struct {
 	Data    *echo.Map `json:"data"`
 }
 
+type AppError struct {
+	Error   error
+	Code    int
+	Message string
+}
+
 type NMResponse struct {
 	Code    int
 	Message string

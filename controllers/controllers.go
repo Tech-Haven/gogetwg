@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/tech-haven/gogetwg/configs"
 	"github.com/tech-haven/gogetwg/responses"
+	"github.com/tech-haven/gogetwg/utils"
 )
 
 // ROUTE: 			GET /clients/:clientid, GetClientConfig
@@ -27,38 +27,12 @@ func GetExtClientConf(config *configs.Config) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, responses.HTTPResponse{Status: http.StatusBadRequest, Message: "error", Data: &echo.Map{"data": "Please specify clientid parameter."}})
 		}
 
-		url := fmt.Sprintf("%s/api/extclients/clients/%s/file", config.NetmakerApiUrl, clientid)
-		req, err := http.NewRequest(http.MethodGet, url, nil)
+		resBody, err := utils.GetExtClientConf(config, clientid)
 		if err != nil {
-			fmt.Print(err)
-			return c.JSON(http.StatusBadRequest, responses.HTTPResponse{Status: http.StatusBadRequest, Message: "error", Data: &echo.Map{"data": "Something went wrong."}})
+			return c.JSON(err.Code, responses.HTTPResponse{Status: err.Code, Message: "error", Data: &echo.Map{"data": err.Message}})
 		}
 
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", configs.MasterKey()))
-		resp, err := config.HttpClient.Do(req)
-		if err != nil {
-			fmt.Print(err)
-			return c.JSON(http.StatusBadRequest, responses.HTTPResponse{Status: http.StatusBadRequest, Message: "error", Data: &echo.Map{"data": "Something went wrong."}})
-		}
-
-		defer resp.Body.Close()
-
-		if resp.StatusCode != 200 {
-			var nmRes responses.NMResponse
-
-			err = json.NewDecoder(resp.Body).Decode(&nmRes)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			return c.JSON(http.StatusOK, responses.HTTPResponse{Status: http.StatusOK, Message: "success", Data: &echo.Map{"data": nmRes}})
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		return c.JSON(http.StatusOK, responses.HTTPResponse{Status: http.StatusOK, Message: "success", Data: &echo.Map{"data": string(body)}})
+		return c.JSON(http.StatusOK, responses.HTTPResponse{Status: http.StatusOK, Message: "success", Data: &echo.Map{"data": string(resBody)}})
 	}
 }
 
@@ -111,15 +85,15 @@ func CreateExtClient(config *configs.Config) echo.HandlerFunc {
 			if err != nil {
 				log.Fatalln(err)
 			}
-			return c.JSON(http.StatusOK, responses.HTTPResponse{Status: http.StatusOK, Message: "success", Data: &echo.Map{"data": nmRes}})
+			return c.JSON(http.StatusOK, responses.HTTPResponse{Status: http.StatusOK, Message: "error", Data: &echo.Map{"data": nmRes}})
 		}
 
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatalln(err)
+		resBody, e := utils.GetExtClientConf(config, jsonBody.ClientID)
+		if e != nil {
+			return c.JSON(e.Code, responses.HTTPResponse{Status: e.Code, Message: "error", Data: &echo.Map{"data": e.Message}})
 		}
 
-		return c.JSON(http.StatusOK, responses.HTTPResponse{Status: http.StatusOK, Message: "success", Data: &echo.Map{"data": string(body)}})
+		return c.JSON(http.StatusOK, responses.HTTPResponse{Status: http.StatusOK, Message: "success", Data: &echo.Map{"data": string(resBody)}})
 	}
 }
 
