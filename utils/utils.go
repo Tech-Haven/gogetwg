@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -30,19 +29,10 @@ func GetExtClientConf(config *configs.Config, clientid string) ([]byte, *respons
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		var nmRes responses.NMResponse
-
-		err := json.NewDecoder(resp.Body).Decode(&nmRes)
-		if err != nil {
-			log.Println(err)
-			return nil, &responses.AppError{Error: err, Code: 500, Message: "Error decoding response body"}
-		}
-
-		if nmRes.Message == "no result found" {
-			return nil, &responses.AppError{Error: nil, Code: 404, Message: nmRes.Message}
-		}
-		return nil, &responses.AppError{Error: nil, Code: nmRes.Code, Message: nmRes.Message}
+	var nmRes responses.NMResponse
+	appErr := nmRes.HandleError(resp)
+	if appErr != nil {
+		return nil, appErr
 	}
 
 	body, err := io.ReadAll(resp.Body)
