@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/tech-haven/gogetwg/configs"
@@ -16,14 +17,14 @@ func GetExtClientConf(config *configs.Config, clientid string) ([]byte, *respons
 	url := fmt.Sprintf("%s/api/extclients/clients/%s/file", config.NetmakerApiUrl, clientid)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		fmt.Print(err)
+		log.Println(err)
 		return nil, &responses.AppError{Error: err, Code: 500, Message: "Error creating HTTP request"}
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", configs.MasterKey()))
 	resp, err := config.HttpClient.Do(req)
 	if err != nil {
-		fmt.Print(err)
+		log.Println(err)
 		return nil, &responses.AppError{Error: err, Code: 500, Message: "Error sending HTTP request"}
 	}
 
@@ -34,7 +35,7 @@ func GetExtClientConf(config *configs.Config, clientid string) ([]byte, *respons
 
 		err := json.NewDecoder(resp.Body).Decode(&nmRes)
 		if err != nil {
-			fmt.Print(err)
+			log.Println(err)
 			return nil, &responses.AppError{Error: err, Code: 500, Message: "Error decoding response body"}
 		}
 
@@ -46,7 +47,7 @@ func GetExtClientConf(config *configs.Config, clientid string) ([]byte, *respons
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Print(err)
+		log.Println(err)
 		return nil, &responses.AppError{Error: err, Code: 500, Message: "Error decoding response body"}
 	}
 
