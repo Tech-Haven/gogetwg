@@ -15,13 +15,13 @@ import (
 
 func GetExtClientConf(config *configs.Config, clientid string) ([]byte, *responses.AppError) {
 	url := fmt.Sprintf("%s/api/extclients/clients/%s/file", config.NetmakerApiUrl, clientid)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+
+	req, err := NewHTTPRequest(http.MethodGet, url, nil)
 	if err != nil {
 		log.Println(err)
 		return nil, &responses.AppError{Error: err, Code: 500, Message: "Error creating HTTP request"}
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", configs.MasterKey()))
 	resp, err := config.HttpClient.Do(req)
 	if err != nil {
 		log.Println(err)
@@ -52,4 +52,15 @@ func GetExtClientConf(config *configs.Config, clientid string) ([]byte, *respons
 	}
 
 	return body, nil
+}
+
+// DESCRIPTION:	returns http request with Auth header
+func NewHTTPRequest(method string, url string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", configs.MasterKey()))
+	return req, nil
 }
