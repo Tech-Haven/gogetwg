@@ -6,7 +6,7 @@ import (
 )
 
 var NETMAKER_API_URL = "https://api.netmaker.techhaven.io"
-var NETMAKER_INGRESS_NODE_ID = "fc4f1e9c-234e-4435-a99e-35904b441f01"
+var NETMAKER_INGRESS_NODE_ID = "0f4fa9f5-4357-4161-b0db-b66d0e627bd4"
 
 type Config struct {
 	HttpClient            *http.Client
